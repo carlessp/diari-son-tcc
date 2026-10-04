@@ -1,0 +1,14 @@
+# Dades personals / metges — NO publicar
+model.jpg
+*.jpg
+*.jpeg
+*.png.tmp
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.swp
+
+# Còpies de seguretat exportades
+diarison-*.json
+diarison-*.csv

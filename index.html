@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ca" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4338ca">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Diari de Son">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Diari de Son · TCC-I</title>
+<style>
+  :root{
+    --bg:#f4f5fb; --card:#ffffff; --ink:#1c2033; --muted:#6b7280;
+    --line:#e5e7ef; --brand:#4338ca; --brand-ink:#ffffff; --brand-soft:#eef0ff;
+    --ok:#0f9d58; --warn:#d97706; --bad:#dc2626; --shadow:0 8px 24px rgba(28,32,51,.08);
+    --radius:16px;
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1020; --card:#171a2e; --ink:#eef0ff; --muted:#9aa0b5;
+    --line:#272b45; --brand:#8b93ff; --brand-ink:#0e1020; --brand-soft:#1e2142;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-text-size-adjust:100%;
+    padding-bottom:84px;
+  }
+  header.app{
+    position:sticky; top:0; z-index:30; background:var(--brand); color:var(--brand-ink);
+    padding:calc(env(safe-area-inset-top) + 10px) 14px 12px;
+    box-shadow:var(--shadow);
+  }
+  header.app .row{display:flex; align-items:center; gap:10px}
+  header.app h1{font-size:16px; margin:0; line-height:1.15; letter-spacing:.2px}
+  header.app .sub{font-size:11.5px; opacity:.85; margin-top:2px}
+  header.app .logo{
+    width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.18);
+    display:grid;place-items:center;font-size:19px;flex:0 0 auto
+  }
+  .iconbtn{
+    background:transparent;border:0;color:inherit;font-size:20px;padding:6px;border-radius:10px;cursor:pointer
+  }
+  .iconbtn:active{background:rgba(255,255,255,.2)}
+  main{max-width:760px;margin:0 auto;padding:14px}
+  .view{display:none}
+  .view.active{display:block; animation:fade .18s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:14px}
+  .card h2{font-size:14px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .card h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--brand)}
+  .hint{font-size:11.5px;color:var(--muted);margin:2px 0 0}
+
+  /* date nav */
+  .datenav{display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .datenav button{
+    background:var(--brand-soft);color:var(--brand);border:1px solid var(--line);
+    border-radius:12px;font-size:18px;width:44px;height:44px;cursor:pointer;font-weight:700
+  }
+  .datenav .center{flex:1;text-align:center;min-width:0}
+  .datenav .wd{font-size:13px;font-weight:700}
+  .datenav input[type=date]{
+    font:inherit;font-size:14px;border:1px solid var(--line);background:transparent;color:var(--ink);
+    border-radius:8px;padding:2px 4px;text-align:center;max-width:170px
+  }
+  .badge{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-weight:700;margin-top:4px}
+
+  /* fields */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:430px){.grid{grid-template-columns:1fr}}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;line-height:1.25}
+  .field .unit{font-weight:400;opacity:.8}
+  input[type=time],input[type=text],input[type=number],input[type=date],select,textarea{
+    width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);
+    border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  input[type=time]{font-variant-numeric:tabular-nums;letter-spacing:.5px}
+  textarea{min-height:74px;resize:vertical}
+  .stepper{display:flex;align-items:center;gap:8px}
+  .stepper button{
+    width:44px;height:44px;flex:0 0 auto;border-radius:12px;border:1px solid var(--line);
+    background:var(--brand-soft);color:var(--brand);font-size:22px;font-weight:700;cursor:pointer
+  }
+  .stepper input{text-align:center;font-size:20px;font-weight:700}
+  .calc-btn{margin-top:6px;font-size:12px;border:1px dashed var(--brand);color:var(--brand);background:transparent;border-radius:10px;padding:7px 10px;cursor:pointer;width:100%}
+
+  /* quality scale */
+  .scale{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+  .scale button{
+    aspect-ratio:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+    border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;padding:0
+  }
+  .scale button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);transform:scale(1.04)}
+  .scalelegend{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:5px}
+
+  /* dynamic rows */
+  .dynrow{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+  .dynrow input{flex:1}
+  .dynrow .del{flex:0 0 auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--bad);font-size:18px;cursor:pointer}
+  .addbtn{margin-top:2px;font-size:13px;border:1px solid var(--line);background:var(--brand-soft);color:var(--brand);border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:12px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 11px;cursor:pointer;color:var(--ink)}
+  .chip small{color:var(--muted)}
+  .empty{font-size:12px;color:var(--muted);font-style:italic}
+
+  /* actions */
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .actions .full{grid-column:1/-1}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:14px;
+    border-radius:13px;padding:13px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer
+  }
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+  .btn.ghost{background:transparent}
+  .btn.danger{color:var(--bad);border-color:var(--bad)}
+  .btn:active{transform:translateY(1px)}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stat{background:var(--bg);border:1px solid var(--line);border-radius:13px;padding:11px}
+  .stat .k{font-size:11px;color:var(--muted);font-weight:600;line-height:1.2}
+  .stat .v{font-size:21px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+  .stat .v small{font-size:11px;font-weight:600;color:var(--muted)}
+
+  /* table */
+  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px}
+  table.data{border-collapse:collapse;width:100%;font-size:12px;min-width:640px}
+  table.data th,table.data td{border:1px solid var(--line);padding:7px 8px;text-align:center;white-space:nowrap}
+  table.data thead th{background:var(--brand-soft);color:var(--brand);font-size:11px;line-height:1.2;position:sticky;top:0}
+  table.data td.txt{text-align:left;white-space:normal;max-width:220px}
+  table.data tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 55%,transparent)}
+  table.data .q{display:inline-block;min-width:22px;padding:1px 6px;border-radius:6px;font-weight:700}
+  .q-hi{background:rgba(15,157,88,.16);color:var(--ok)}
+  .q-md{background:rgba(217,119,6,.16);color:var(--warn)}
+  .q-lo{background:rgba(220,38,38,.16);color:var(--bad)}
+
+  /* bars */
+  .bars{display:flex;flex-direction:column;gap:8px}
+  .barrow{display:grid;grid-template-columns:52px 1fr 54px;align-items:center;gap:8px;font-size:11.5px}
+  .barrow .track{background:var(--bg);border:1px solid var(--line);border-radius:8px;height:20px;overflow:hidden;display:flex}
+  .barrow .fillH{background:linear-gradient(90deg,#6366f1,#4338ca);height:100%}
+  .barrow .fillQ{background:linear-gradient(90deg,#34d399,#0f9d58);height:100%;margin-left:auto;opacity:.9}
+  .barrow .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+
+  .toast{
+    position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:var(--shadow)
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  nav.tabs{
+    position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--card);border-top:1px solid var(--line);
+    display:grid;grid-template-columns:repeat(3,1fr);padding-bottom:env(safe-area-inset-bottom)
+  }
+  nav.tabs button{
+    background:transparent;border:0;color:var(--muted);font:inherit;font-size:11px;font-weight:700;
+    padding:10px 4px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px
+  }
+  nav.tabs button .ic{font-size:20px}
+  nav.tabs button.on{color:var(--brand)}
+  nav.tabs button.on .ic{transform:translateY(-1px)}
+
+  .medlist .dynrow input:nth-child(2){flex:0 0 120px}
+  .tag{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px}
+  details.help{margin-top:8px}
+  details.help summary{cursor:pointer;font-size:12px;color:var(--brand);font-weight:600}
+  details.help p{font-size:12px;color:var(--muted);line-height:1.5}
+
+  /* print */
+  #printArea{display:none}
+  @media print{
+    @page{size:A4 landscape;margin:9mm}
+    body *{visibility:hidden!important}
+    #printArea,#printArea *{visibility:visible!important}
+    #printArea{display:block!important;position:absolute;left:0;top:0;width:100%;color:#000}
+    .noprint{display:none!important}
+  }
+  #printArea .p-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px}
+  #printArea .p-head h1{font-size:15px;margin:0;text-transform:uppercase}
+  #printArea .p-head .meta{font-size:10.5px;line-height:1.5;text-align:right}
+  #printArea .p-patient{font-size:11px;margin-bottom:8px;line-height:1.6}
+  #printArea table{border-collapse:collapse;width:100%;font-size:9.5px}
+  #printArea th,#printArea td{border:1px solid #000;padding:4px 4px;text-align:center;vertical-align:middle}
+  #printArea thead th{font-size:8.5px;line-height:1.15}
+  #printArea td.txt{text-align:left}
+  #printArea tfoot td{font-size:10px;border-top:2px solid #000;padding-top:6px}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="row">
+    <div class="logo">🌙</div>
+    <div style="flex:1;min-width:0">
+      <h1>Diari de Son · TCC-I</h1>
+      <div class="sub" id="headerPatient">Teràpia conductual-cognitiva per a l'insomni</div>
+    </div>
+    <button class="iconbtn" id="themeBtn" title="Canviar tema">☾</button>
+  </div>
+</header>
+
+<main>
+  <!-- ================= ENTRY ================= -->
+  <section class="view active" id="view-entry">
+    <div class="card">
+      <div class="datenav">
+        <button id="prevDay" aria-label="Dia anterior">‹</button>
+        <div class="center">
+          <div class="wd" id="curWeekday">—</div>
+          <input type="date" id="curDate">
+          <div><span class="badge" id="fillBadge">sense dades</span></div>
+        </div>
+        <button id="nextDay" aria-label="Dia següent">›</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn ghost" style="flex:1" id="todayBtn">Avui</button>
+        <button class="btn ghost" style="flex:1" id="prevDayFillBtn">↓ Copiar dia anterior</button>
+      </div>
+    </div>
+
+    <form id="entryForm" autocomplete="off">
+      <div class="card">
+        <h2><span class="dot"></span>Nit</h2>
+        <div class="grid">
+          <div class="field"><label>Hora que em fico al llit <span class="unit">(HH:MM)</span></label><input type="time" name="llit"></div>
+          <div class="field"><label>Hora que m'adormo <span class="unit">(HH:MM)</span></label><input type="time" name="adorm"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>Al dia següent</h2>
+        <div class="grid">
+          <div class="field"><label>Hora que em desperto <span class="unit">(HH:MM)</span></label><input type="time" name="desperta"></div>
+          <div class="field"><label>Hora que em llevo <span class="unit">(HH:MM)</span></label><input type="time" name="lleva"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>Durant la nit</h2>
+        <div class="grid">
+          <div class="field">
+            <label>Vegades que m'he despertat</label>
+            <div class="stepper"><button type="button" data-step="despertars:-1">−</button><input type="number" inputmode="numeric" name="despertars" min="0" max="60" step="1" value="0"><button type="button" data-step="despertars:1">+</button></div>
+          </div>
+          <div class="field">
+            <label>Cops que m'he aixecat del llit</label>
+            <div class="stepper"><button type="button" data-step="aixecars:-1">−</button><input type="number" inputmode="numeric" name="aixecars" min="0" max="60" step="1" value="0"><button type="button" data-step="aixecars:1">+</button></div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Hores en què em torno a dormir <span class="unit">(una hora per cada despertar)</span></label>
+          <div id="tornsList"></div>
+          <button type="button" class="addbtn" id="addTorn">+ Afegir hora</button>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Total d'hores que he dormit <span class="unit">(hores)</span></label>
+          <input type="number" inputmode="decimal" name="totalDormit" min="0" max="24" step="0.25" placeholder="p. ex. 6.5">
+          <button type="button" class="calc-btn" id="calcTotal">≈ Calcular automàticament</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>Medicament que he pres <span class="unit" style="font-size:11px;color:var(--muted)">(nom i dosi)</span></h2>
+        <div id="medsList" class="medlist"></div>
+        <button type="button" class="addbtn" id="addMed">+ Afegir medicament</button>
+        <div id="medChipsWrap" style="display:none">
+          <div class="tag">Recordats (toca per afegir)</div>
+          <div class="chips" id="medChips"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="dot"></span>Valoració</h2>
+        <div class="field">
+          <label>Qualifica la son de 0 a 10 <span class="unit">(0 = malament · 10 = excel·lent)</span></label>
+          <div class="scale" id="scale"></div>
+          <div class="scalelegend"><span>0 · Malament</span><span id="scaleVal">—</span><span>10 · Excel·lent</span></div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label>Com m'he sentit durant el dia</label>
+          <textarea name="sentiments" placeholder="p. ex. cansat, amb son, bé..."></textarea>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Notes (opcional)</label>
+          <textarea name="notes" placeholder="cafeïna, estrès, migdiada, exercici..."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="actions">
+          <button type="button" class="btn primary full" id="saveBtn">✓ Desar el dia</button>
+          <button type="button" class="btn ghost" id="clearDayBtn">Netejar aquest dia</button>
+          <button type="button" class="btn ghost" id="goViewBtn">Veure resum →</button>
+        </div>
+        <p class="hint">Les dades es desen automàticament al teu telèfon (localStorage).</p>
+      </div>
+    </form>
+  </section>
+
+  <!-- ================= VIEW ================= -->
+  <section class="view" id="view-view">
+    <div class="card">
+      <h2><span class="dot"></span>Resum</h2>
+      <div class="stats" id="stats"></div>
+      <p class="hint" id="statsRange">—</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Evolució (últims dies)</h2>
+      <div class="bars" id="bars"></div>
+      <div class="scalelegend" style="margin-top:10px"><span>▮ Hores dormides</span><span>▮ Qualitat (0-10)</span></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Taula de registres</h2>
+      <div class="tablewrap"><table class="data" id="dataTable"></table></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Exportar</h2>
+      <div class="actions">
+        <button class="btn primary" id="pdfBtn">🖨 PDF / Imprimir</button>
+        <button class="btn" id="csvBtn">⬇ CSV</button>
+      </div>
+      <p class="hint">El PDF s'obre amb el diàleg d'impressió del telèfon: tria «Desa com a PDF».</p>
+    </div>
+  </section>
+
+  <!-- ================= DATA ================= -->
+  <section class="view" id="view-data">
+    <div class="card">
+      <h2><span class="dot"></span>Dades del pacient</h2>
+      <div class="grid">
+        <div class="field"><label>Nom i cognoms</label><input type="text" id="pNom"></div>
+        <div class="field"><label>Número de SAP</label><input type="text" id="pSap"></div>
+        <div class="field"><label>Data de naixement</label><input type="date" id="pNaix"></div>
+        <div class="field"><label>Nº Pacient</label><input type="text" id="pPacient"></div>
+        <div class="field"><label>NASS</label><input type="text" id="pNass"></div>
+        <div class="field"><label>Nº Cas</label><input type="text" id="pCas"></div>
+        <div class="field"><label>Servei</label><input type="text" id="pServei"></div>
+        <div class="field"><label>Data d'entrega del diari</label><input type="date" id="pEntrega"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Còpia de seguretat (localStorage)</h2>
+      <p class="hint">Descarrega el fitxer JSON per guardar-lo o traspassar-lo a un altre dispositiu.</p>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn primary" id="exportJson">⬇ Descarregar JSON</button>
+        <button class="btn" id="importJsonBtn">⬆ Carregar JSON</button>
+        <input type="file" id="importJson" accept="application/json,.json" hidden>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn" id="csvBtn2">⬇ Descarregar CSV</button>
+        <button class="btn danger" id="wipeBtn">Esborrar tot</button>
+      </div>
+      <p class="hint" id="storageInfo">—</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Medicaments recordats</h2>
+      <div class="chips" id="medCatalogChips"></div>
+      <p class="hint">S'afegiran sols automàticament quan els facis servir. Toca ✕ per oblidar-ne un.</p>
+    </div>
+
+    <div class="card">
+      <details class="help">
+        <summary>Com funciona</summary>
+        <p>• <b>Introduir</b>: omple el dia d'avui. Les hores usen rellotge HH:MM, els comptes són números i la qualitat una escala 0-10. Tot es desa sol.</p>
+        <p>• <b>Visualitzar</b>: resum, gràfics i taula. Exporta a PDF (per imprimir) o CSV (per full de càlcul).</p>
+        <p>• <b>Dades</b>: fitxa del pacient i còpia de seguretat JSON per carregar/descarregar.</p>
+        <p>• Tot funciona sense internet dins del navegador del telèfon.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<nav class="tabs">
+  <button data-view="entry" class="on"><span class="ic">✎</span>Introduir</button>
+  <button data-view="view"><span class="ic">📊</span>Visualitzar</button>
+  <button data-view="data"><span class="ic">🗄</span>Dades</button>
+</nav>
+
+<div id="printArea"></div>
+
+<script>
+"use strict";
+/* ------------------------------------------------------------------ *
+ *  Diari de Son · TCC-I  —  dades en JSON dins localStorage
+ * ------------------------------------------------------------------ */
+const STORE_KEY = "diarison.v1";
+const WEEKDAYS = ["Diumenge","Dilluns","Dimarts","Dimecres","Dijous","Divendres","Dissabte"];
+const $  = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+
+/* ---------- estat ---------- */
+function defaultState(){
+  return {
+    version: 1,
+    meta: { nom:"", sap:"", naix:"", pacient:"", nass:"", cas:"", servei:"", entrega:"" },
+    meds: [],           // catàleg: [{nom, dosi}]
+    dies: {},           // "YYYY-MM-DD": { ... }
+    ui: { theme: "light" }
+  };
+}
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    return Object.assign(defaultState(), s, { meta: Object.assign(defaultState().meta, s.meta||{}) });
+  }catch(e){ console.warn("Error llegint dades", e); return defaultState(); }
+}
+function save(immediate){
+  clearTimeout(save._t);
+  const doIt = () => {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    updateStorageInfo();
+  };
+  if(immediate) doIt(); else save._t = setTimeout(doIt, 350);
+}
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 1600);
+}
+
+/* ---------- utilitats de data ---------- */
+function todayISO(){ const d=new Date(); return isoOf(d); }
+function isoOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function parseISO(iso){ const [y,m,d]=iso.split("-").map(Number); return new Date(y,m-1,d); }
+function weekdayName(iso){ return WEEKDAYS[parseISO(iso).getDay()]; }
+function prettyDate(iso){ const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
+function shiftDay(iso, n){ const d=parseISO(iso); d.setDate(d.getDate()+n); return isoOf(d); }
+function toMin(hhmm){ if(!hhmm) return null; const m=/^(\d{1,2}):(\d{2})$/.exec(hhmm); if(!m) return null; return (+m[1])*60 + (+m[2]); }
+function overnight(start,end){ const a=toMin(start), b=toMin(end); if(a==null||b==null) return null; let d=b-a; if(d<0) d+=1440; return d; } // minuts
+function fmtHours(min){ if(min==null) return "—"; return (min/60).toFixed(2).replace(/\.?0+$/,"") + " h"; }
+function fmtHM(min){ if(min==null) return "—"; const h=Math.floor(min/60), m=Math.round(min%60); return `${h}h ${String(m).padStart(2,"0")}m`; }
+
+/* ---------- accés a dies ---------- */
+function emptyDay(){
+  return { llit:"", adorm:"", desperta:"", lleva:"", despertars:0, aixecars:0, torns:[], totalDormit:"", meds:[], qualitat:null, sentiments:"", notes:"" };
+}
+function getDay(iso){ return Object.assign(emptyDay(), state.dies[iso]||{}); }
+function setDay(iso, data){
+  const clean = {...data};
+  const empty = JSON.stringify(clean) === JSON.stringify(emptyDay());
+  if(empty) delete state.dies[iso]; else state.dies[iso] = clean;
+  save();
+}
+function dayHasData(iso){ return !!state.dies[iso]; }
+function sortedDays(){ return Object.keys(state.dies).sort(); }
+
+/* ---------- mètriques ---------- */
+function metrics(iso){
+  const d = getDay(iso);
+  const latencia = overnight(d.llit, d.adorm);        // minuts per adormir-se
+  const tempsLlit = overnight(d.llit, d.lleva);        // minuts al llit
+  const aLlit = overnight(d.adorm, d.desperta);        // minuts adormit (estimació despertar-adormir)
+  const declarat = d.totalDormit==="" || d.totalDormit==null ? null : Math.round(parseFloat(d.totalDormit)*60);
+  const dormit = declarat!=null ? declarat : aLlit;
+  const efic = (tempsLlit && dormit!=null) ? Math.round(dormit/tempsLlit*100) : null;
+  return { latencia, tempsLlit, aLlit, dormit, efic, qualitat: d.qualitat };
+}
+
+/* ================================================================== *
+ *  VISTA INTRODUIR
+ * ================================================================== */
+let currentDate = todayISO();
+
+function renderDateNav(){
+  $("#curDate").value = currentDate;
+  $("#curWeekday").textContent = `${weekdayName(currentDate)} · ${prettyDate(currentDate)}`;
+  const has = dayHasData(currentDate);
+  const b = $("#fillBadge");
+  b.textContent = has ? "✓ desat" : "sense dades";
+  b.style.opacity = has ? "1" : ".7";
+}
+function renderForm(){
+  const d = getDay(currentDate);
+  const f = $("#entryForm");
+  ["llit","adorm","desperta","lleva","sentiments","notes"].forEach(n => f.elements[n].value = d[n] ?? "");
+  f.elements.totalDormit.value = d.totalDormit ?? "";
+  f.elements.despertars.value = d.despertars || 0;
+  f.elements.aixecars.value = d.aixecars || 0;
+  renderTorns(d.torns);
+  renderMeds(d.meds);
+  renderScale(d.qualitat);
+  renderMedChips();
+}
+function readForm(){
+  const f = $("#entryForm");
+  const q = $("#scale").dataset.value;
+  return {
+    llit: f.elements.llit.value,
+    adorm: f.elements.adorm.value,
+    desperta: f.elements.desperta.value,
+    lleva: f.elements.lleva.value,
+    despertars: Math.max(0, parseInt(f.elements.despertars.value,10) || 0),
+    aixecars: Math.max(0, parseInt(f.elements.aixecars.value,10) || 0),
+    torns: $$("#tornsList input").map(i=>i.value).filter(Boolean),
+    totalDormit: f.elements.totalDormit.value === "" ? "" : parseFloat(f.elements.totalDormit.value),
+    meds: $$("#medsList .dynrow").map(r=>({
+      nom: r.querySelector(".m-nom").value.trim(),
+      dosi: r.querySelector(".m-dosi").value.trim()
+    })).filter(m=>m.nom),
+    qualitat: q===""||q==null ? null : +q,
+    sentiments: f.elements.sentiments.value.trim(),
+    notes: f.elements.notes.value.trim()
+  };
+}
+
+/* torns (hores de tornar a dormir) */
+function renderTorns(list){
+  const box = $("#tornsList"); box.innerHTML = "";
+  (list && list.length ? list : [""]).forEach(v => box.appendChild(tornRow(v)));
+}
+function tornRow(v=""){
+  const div = document.createElement("div"); div.className = "dynrow";
+  div.innerHTML = `<input type="time" value="${v}"><button type="button" class="del" title="Treure">✕</button>`;
+  div.querySelector(".del").addEventListener("click", ()=>{ div.remove(); autosave(); });
+  return div;
+}
+
+/* medicaments */
+function renderMeds(list){
+  const box = $("#medsList"); box.innerHTML = "";
+  if(!list || !list.length){ box.appendChild(medRow()); }
+  else list.forEach(m => box.appendChild(medRow(m.nom, m.dosi)));
+}
+function medRow(nom="", dosi=""){
+  const div = document.createElement("div"); div.className = "dynrow";
+  div.innerHTML = `
+    <input class="m-nom" type="text" list="medOptions" placeholder="Medicament" value="${escapeAttr(nom)}">
+    <input class="m-dosi" type="text" placeholder="Dosi" value="${escapeAttr(dosi)}">
+    <button type="button" class="del" title="Treure">✕</button>`;
+  div.querySelector(".del").addEventListener("click", ()=>{ div.remove(); autosave(); });
+  return div;
+}
+function ensureDatalist(){
+  if($("#medOptions")) return;
+  const dl = document.createElement("datalist"); dl.id = "medOptions";
+  document.body.appendChild(dl);
+}
+function renderMedChips(){
+  ensureDatalist();
+  $("#medOptions").innerHTML = state.meds.map(m=>`<option value="${escapeAttr(m.nom)}">`).join("");
+  const wrap = $("#medChipsWrap"), chips = $("#medChips");
+  const recent = state.meds.slice(0,10);
+  if(!recent.length){ wrap.style.display="none"; return; }
+  wrap.style.display="block"; chips.innerHTML="";
+  recent.forEach(m=>{
+    const c=document.createElement("button"); c.type="button"; c.className="chip";
+    c.innerHTML = `${escapeHtml(m.nom)} <small>${escapeHtml(m.dosi||"")}</small>`;
+    c.addEventListener("click", ()=>{
+      // si l'única fila és buida, reaprofita-la
+      const rows = $$("#medsList .dynrow");
+      let target = rows.find(r => !r.querySelector(".m-nom").value.trim());
+      if(!target){ target = medRow(); $("#medsList").appendChild(target); }
+      target.querySelector(".m-nom").value = m.nom;
+      target.querySelector(".m-dosi").value = m.dosi || "";
+      autosave();
+    });
+    chips.appendChild(c);
+  });
+}
+
+/* escala de qualitat */
+function renderScale(val){
+  const box = $("#scale"); box.innerHTML = "";
+  box.dataset.value = (val==null?"":String(val));
+  for(let i=0;i<=10;i++){
+    const b=document.createElement("button"); b.type="button"; b.textContent=i;
+    if(val!=null && +val===i) b.classList.add("on");
+    b.addEventListener("click", ()=>{ setScale(i); });
+    box.appendChild(b);
+  }
+  $("#scaleVal").textContent = val==null ? "—" : `${val}/10`;
+}
+function setScale(i){
+  $("#scale").dataset.value = String(i);
+  $$("#scale button").forEach(b=>b.classList.toggle("on", +b.textContent===i));
+  $("#scaleVal").textContent = `${i}/10`;
+  autosave();
+}
+
+/* desament automàtic */
+function autosave(refresh){
+  const data = readForm();
+  setDay(currentDate, data);
+  rememberMeds(data.meds);
+  renderDateNav();
+  if(refresh) renderMedChips();
+}
+function rememberMeds(meds){
+  let changed = false;
+  meds.forEach(m=>{
+    if(!m.nom) return;
+    const i = state.meds.findIndex(x=>x.nom.toLowerCase()===m.nom.toLowerCase());
+    if(i<0){ state.meds.unshift({nom:m.nom, dosi:m.dosi||""}); changed=true; }
+    else if(m.dosi && state.meds[i].dosi!==m.dosi){ state.meds[i].dosi=m.dosi; changed=true; }
+  });
+  if(changed) save();
+}
+function escapeAttr(s){ return String(s??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function escapeHtml(s){ return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ================================================================== *
+ *  VISTA VISUALITZAR
+ * ================================================================== */
+function renderView(){
+  const days = sortedDays();
+  const stats = $("#stats"), bars = $("#bars"), table = $("#dataTable");
+
+  /* --- resum --- */
+  if(!days.length){
+    stats.innerHTML = `<div class="stat" style="grid-column:1/-1"><div class="k">Encara no hi ha registres</div><div class="v">—</div></div>`;
+    $("#statsRange").textContent = "Ves a «Introduir» per començar.";
+    bars.innerHTML = `<p class="empty">Sense dades per mostrar.</p>`;
+    table.innerHTML = "";
+    return;
+  }
+  const ms = days.map(metrics);
+  const avg = a => { const v=a.filter(x=>x!=null && !isNaN(x)); return v.length? v.reduce((s,x)=>s+x,0)/v.length : null; };
+  const avgDormit = avg(ms.map(m=>m.dormit));
+  const avgQual = avg(ms.map(m=>m.qualitat));
+  const avgLat = avg(ms.map(m=>m.latencia));
+  const avgEfic = avg(ms.map(m=>m.efic));
+  const avgDesp = avg(days.map(iso=>getDay(iso).despertars));
+  stats.innerHTML = `
+    ${statCard("Dies registrats", days.length, "")}
+    ${statCard("Mitjana dormida", avgDormit==null?"—":(avgDormit/60).toFixed(1), "h")}
+    ${statCard("Qualitat mitjana", avgQual==null?"—":avgQual.toFixed(1), "/10")}
+    ${statCard("Eficiència del son", avgEfic==null?"—":Math.round(avgEfic), "%")}
+    ${statCard("Latència mitjana", avgLat==null?"—":Math.round(avgLat), "min")}
+    ${statCard("Despertars / nit", avgDesp==null?"—":avgDesp.toFixed(1), "")}
+  `;
+  $("#statsRange").textContent = `${prettyDate(days[0])} → ${prettyDate(days[days.length-1])}`;
+
+  /* --- gràfics: últims 14 dies --- */
+  const last = days.slice(-14);
+  bars.innerHTML = "";
+  const maxH = 10;
+  last.forEach(iso=>{
+    const m = metrics(iso), d = getDay(iso);
+    const h = (m.dormit||0)/60;
+    const q = d.qualitat==null?0:d.qualitat;
+    const row = document.createElement("div"); row.className="barrow";
+    row.innerHTML = `
+      <div>${prettyDate(iso).slice(0,5)}</div>
+      <div class="track">
+        <div class="fillH" style="width:${Math.min(100,h/maxH*100)}%" title="${h.toFixed(1)} h"></div>
+        <div class="fillQ" style="width:${q/10*40}%" title="Qualitat ${q}"></div>
+      </div>
+      <div class="val">${h?h.toFixed(1):"–"}h·${d.qualitat==null?"–":q}</div>`;
+    bars.appendChild(row);
+  });
+
+  /* --- taula --- */
+  const head = `
+    <thead>
+      <tr>
+        <th rowspan="2">Dia</th><th rowspan="2">Data</th>
+        <th colspan="2">Nit</th>
+        <th colspan="2">Al dia següent</th>
+        <th colspan="4">Durant la nit</th>
+        <th rowspan="2">Medicació</th>
+        <th rowspan="2">Qualitat<br>0-10</th>
+        <th rowspan="2">Com m'he sentit</th>
+      </tr>
+      <tr>
+        <th>Al llit</th><th>Adormir</th>
+        <th>Despertar</th><th>Llevar-se</th>
+        <th>Nº despertars</th><th>Cops aixecat</th><th>Torna a dormir</th><th>Total dormit</th>
+      </tr>
+    </thead>`;
+  const body = days.map(iso=>{
+    const d=getDay(iso), m=metrics(iso);
+    const qc = d.qualitat==null ? "" : (d.qualitat>=7?"q-hi":d.qualitat>=4?"q-md":"q-lo");
+    const meds = (d.meds||[]).map(x=>escapeHtml(x.nom)+(x.dosi?` (${escapeHtml(x.dosi)})`:"")).join(", ");
+    return `<tr>
+      <td>${weekdayName(iso).slice(0,2)}</td>
+      <td>${prettyDate(iso)}</td>
+      <td>${d.llit||"—"}</td><td>${d.adorm||"—"}</td>
+      <td>${d.desperta||"—"}</td><td>${d.lleva||"—"}</td>
+      <td>${d.despertars||0}</td><td>${d.aixecars||0}</td>
+      <td>${(d.torns&&d.torns.length?d.torns.join(", "):"—")}</td>
+      <td>${m.dormit==null?"—":(m.dormit/60).toFixed(1)+" h"}</td>
+      <td class="txt">${meds||"—"}</td>
+      <td>${d.qualitat==null?"—":`<span class="q ${qc}">${d.qualitat}</span>`}</td>
+      <td class="txt">${escapeHtml(d.sentiments)||"—"}</td>
+    </tr>`;
+  }).join("");
+  table.innerHTML = head + `<tbody>${body}</tbody>`;
+}
+function statCard(k,v,u){
+  return `<div class="stat"><div class="k">${k}</div><div class="v">${v}${u?` <small>${u}</small>`:""}</div></div>`;
+}
+
+/* ================================================================== *
+ *  PDF / IMPRESSIÓ
+ * ================================================================== */
+function renderPrint(){
+  const days = sortedDays();
+  const meta = state.meta;
+  const head = `
+    <div class="p-head">
+      <div>
+        <h1>Diari de son per la teràpia conductual-cognitiva per a l'insomni</h1>
+        <div style="font-size:11px">Servei de ${escapeHtml(meta.servei||"Neurofisiologia Clínica")} · Hospital Universitari Vall d'Hebron</div>
+      </div>
+      <div class="meta">
+        <div><b>Nom i cognoms:</b> ${escapeHtml(meta.nom)||"&nbsp;"}</div>
+        <div><b>Nº SAP:</b> ${escapeHtml(meta.sap)||"&nbsp;"} &nbsp; <b>Nº Pacient:</b> ${escapeHtml(meta.pacient)||"&nbsp;"}</div>
+        <div><b>Data d'entrega:</b> ${meta.entrega?prettyDate(meta.entrega):"&nbsp;"}</div>
+      </div>
+    </div>`;
+  const headRow = `<thead><tr>
+    <th rowspan="2">Dia de la<br>setmana i data</th>
+    <th colspan="2">Nit</th>
+    <th colspan="2">Al dia següent</th>
+    <th colspan="4">Durant la nit</th>
+    <th rowspan="2">Medicament que ha pres<br>(nom i dosis)</th>
+    <th rowspan="2">Qualifica la son<br>de 0 a 10</th>
+    <th rowspan="2">Com se ha sentit<br>durant el dia</th>
+  </tr><tr>
+    <th>Hora en què es<br>fica al llit</th><th>Hora en què<br>s'adorm</th>
+    <th>Hora en què es<br>desperta</th><th>Hora en què es<br>lleva</th>
+    <th>Número de vegades<br>que s'ha despertat</th>
+    <th>Quants cops s'ha<br>aixecat del llit</th>
+    <th>Hores en què es<br>torna a dormir</th>
+    <th>Total d'hores<br>que ha dormit</th>
+  </tr></thead>`;
+  const rows = days.length ? days.map((iso,i)=>{
+    const d=getDay(iso), m=metrics(iso);
+    const meds=(d.meds||[]).map(x=>x.nom+(x.dosi?` (${x.dosi})`:"")).join(", ");
+    return `<tr>
+      <td>${i+1}. ${weekdayName(iso)} ${prettyDate(iso)}</td>
+      <td>${d.llit||""}</td><td>${d.adorm||""}</td>
+      <td>${d.desperta||""}</td><td>${d.lleva||""}</td>
+      <td>${d.despertars||""}</td><td>${d.aixecars||""}</td>
+      <td>${(d.torns||[]).join(", ")}</td>
+      <td>${m.dormit==null?"":(m.dormit/60).toFixed(1)}</td>
+      <td class="txt">${escapeHtml(meds)}</td>
+      <td>${d.qualitat==null?"":d.qualitat}</td>
+      <td class="txt">${escapeHtml(d.sentiments)}</td>
+    </tr>`;
+  }).join("") : emptyPrintRows();
+  $("#printArea").innerHTML = head + `<div class="p-patient">Registre de ${days.length} nit(s).</div>` +
+    `<table>${headRow}<tbody>${rows}</tbody></table>`;
+  $("#printArea").innerHTML += `<div style="font-size:9.5px;margin-top:6px">Generat el ${prettyDate(todayISO())} · Diari de Son TCC-I</div>`;
+}
+function emptyPrintRows(){
+  return Array.from({length:7},(_,i)=>`<tr><td>${i+1}. ______ / ____ / ______</td>${"<td></td>".repeat(11)}</tr>`).join("");
+}
+function doPrint(){ renderPrint(); setTimeout(()=>window.print(), 60); }
+
+/* ================================================================== *
+ *  CSV
+ * ================================================================== */
+const CSV_HEAD = ["Data","Dia de la setmana","Hora al llit","Hora adormir","Hora despertar","Hora llevar-se",
+  "Numero de vegades despertat","Cops aixecat del llit","Hores tornar a dormir","Total hores dormit",
+  "Medicament (nom i dosi)","Qualifica la son 0-10","Com se ha sentit","Notes"];
+function buildCSV(){
+  const rows = [CSV_HEAD];
+  sortedDays().forEach(iso=>{
+    const d=getDay(iso), m=metrics(iso);
+    const meds=(d.meds||[]).map(x=>x.nom+(x.dosi?` (${x.dosi})`:"")).join(" | ");
+    rows.push([
+      prettyDate(iso), weekdayName(iso), d.llit, d.adorm, d.desperta, d.lleva,
+      d.despertars||"", d.aixecars||"", (d.torns||[]).join(" | "),
+      m.dormit==null?"":(m.dormit/60).toFixed(2),
+      meds, d.qualitat==null?"":d.qualitat, d.sentiments||"", d.notes||""
+    ]);
+  });
+  return rows.map(r=>r.map(cell).join(";")).join("\r\n");
+}
+function cell(v){ const s=String(v??""); return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+function download(filename, text, mime){
+  const blob = new Blob([text], {type:(mime||"text/plain")+";charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 500);
+}
+function exportCSV(){ download(`diarison-${todayISO()}.csv`, "\uFEFF"+buildCSV(), "text/csv"); toast("CSV descarregat"); }
+function exportJSON(){ download(`diarison-${todayISO()}.json`, JSON.stringify(state,null,2), "application/json"); toast("JSON descarregat"); }
+
+/* ================================================================== *
+ *  DADES · pacient, backups, catàleg
+ * ================================================================== */
+function renderMeta(){
+  const m=state.meta;
+  $("#pNom").value=m.nom||""; $("#pSap").value=m.sap||""; $("#pNaix").value=m.naix||"";
+  $("#pPacient").value=m.pacient||""; $("#pNass").value=m.nass||""; $("#pCas").value=m.cas||"";
+  $("#pServei").value=m.servei||""; $("#pEntrega").value=m.entrega||"";
+  $("#headerPatient").textContent = m.nom ? `${m.nom}${m.pacient?" · Nº "+m.pacient:""}` : "Teràpia conductual-cognitiva per a l'insomni";
+}
+function bindMeta(){
+  const map = {pNom:"nom",pSap:"sap",pNaix:"naix",pPacient:"pacient",pNass:"nass",pCas:"cas",pServei:"servei",pEntrega:"entrega"};
+  Object.entries(map).forEach(([id,key])=>{
+    $("#"+id).addEventListener("input", ()=>{ state.meta[key]=$("#"+id).value.trim(); save(); renderMeta(); });
+  });
+}
+function renderMedCatalog(){
+  const box=$("#medCatalogChips");
+  if(!state.meds.length){ box.innerHTML=`<p class="empty">Cap medicament recordat encara.</p>`; return; }
+  box.innerHTML="";
+  state.meds.forEach((m,i)=>{
+    const c=document.createElement("button"); c.type="button"; c.className="chip";
+    c.innerHTML = `${escapeHtml(m.nom)} ${m.dosi?`<small>${escapeHtml(m.dosi)}</small>`:""} <span style="color:var(--bad)">✕</span>`;
+    c.addEventListener("click", ()=>{ state.meds.splice(i,1); save(); renderMedCatalog(); renderMedChips(); });
+    box.appendChild(c);
+  });
+}
+function updateStorageInfo(){
+  const bytes = new Blob([localStorage.getItem(STORE_KEY)||""]).size;
+  const n = Object.keys(state.dies).length;
+  $("#storageInfo").textContent = `${n} dia(n) desat(s) · ${(bytes/1024).toFixed(1)} KB al localStorage`;
+}
+
+/* ================================================================== *
+ *  IMPORT
+ * ================================================================== */
+function importJSON(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data!=="object" || !("dies" in data)) throw new Error("format");
+      const merged = Object.assign(defaultState(), data, { meta:Object.assign(defaultState().meta, data.meta||{}) });
+      if(!confirm("Vols substituir les dades actuals per les del fitxer?")){
+        // fusiona
+        Object.assign(state.dies, merged.dies);
+        const names = new Set(state.meds.map(m=>m.nom.toLowerCase()));
+        merged.meds.forEach(m=>{ if(!names.has(m.nom.toLowerCase())) state.meds.push(m); });
+        state.meta = Object.assign(state.meta, merged.meta);
+      } else {
+        state = merged;
+      }
+      save(true); renderAll(); toast("Dades carregades");
+    }catch(e){ alert("Fitxer JSON no vàlid."); }
+  };
+  reader.readAsText(file);
+}
+
+/* ================================================================== *
+ *  NAVEGACIÓ I ESDEVENIMENTS
+ * ================================================================== */
+function showView(name){
+  $$(".view").forEach(v=>v.classList.toggle("active", v.id==="view-"+name));
+  $$("nav.tabs button").forEach(b=>b.classList.toggle("on", b.dataset.view===name));
+  window.scrollTo({top:0,behavior:"instant"});
+  if(name==="view") renderView();
+  if(name==="data"){ renderMeta(); renderMedCatalog(); updateStorageInfo(); }
+}
+function renderAll(){ renderDateNav(); renderForm(); renderMeta(); }
+
+function init(){
+  /* tema */
+  const t = state.ui.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark":"light");
+  document.documentElement.setAttribute("data-theme", t);
+  $("#themeBtn").textContent = t==="dark" ? "☀" : "☾";
+  $("#themeBtn").addEventListener("click", ()=>{
+    const cur = document.documentElement.getAttribute("data-theme");
+    const nx = cur==="dark"?"light":"dark";
+    document.documentElement.setAttribute("data-theme", nx);
+    state.ui.theme = nx; save(); $("#themeBtn").textContent = nx==="dark"?"☀":"☾";
+  });
+
+  /* navegació de dies */
+  $("#prevDay").addEventListener("click", ()=>{ currentDate=shiftDay(currentDate,-1); renderDateNav(); renderForm(); });
+  $("#nextDay").addEventListener("click", ()=>{ currentDate=shiftDay(currentDate,1); renderDateNav(); renderForm(); });
+  $("#curDate").addEventListener("change", e=>{ if(e.target.value){ currentDate=e.target.value; renderDateNav(); renderForm(); } });
+  $("#todayBtn").addEventListener("click", ()=>{ currentDate=todayISO(); renderDateNav(); renderForm(); });
+  $("#prevDayFillBtn").addEventListener("click", ()=>{
+    const prev = shiftDay(currentDate,-1);
+    if(!dayHasData(prev)){ toast("El dia anterior no té dades"); return; }
+    const src = getDay(prev);
+    setDay(currentDate, { ...src, sentiments:"", notes:"" });
+    renderDateNav(); renderForm(); toast("Copiat del dia anterior");
+  });
+
+  /* form: esdeveniments */
+  const form = $("#entryForm");
+  form.addEventListener("input", ()=>{ autosave(false); });
+  form.addEventListener("change", ()=>{ autosave(true); });
+  $$(".stepper button").forEach(b=>b.addEventListener("click", ()=>{
+    const [name,delta] = b.dataset.step.split(":");
+    const inp = form.elements[name];
+    inp.value = Math.max(0, (parseInt(inp.value,10)||0) + parseInt(delta,10));
+    autosave();
+  }));
+  $("#addMed").addEventListener("click", ()=>{ $("#medsList").appendChild(medRow()); });
+  $("#addTorn").addEventListener("click", ()=>{ $("#tornsList").appendChild(tornRow()); });
+  $("#calcTotal").addEventListener("click", ()=>{
+    const d=readForm(); let min=overnight(d.adorm,d.desperta);
+    if(min==null){ toast("Cal l'hora d'adormir-se i de despertar-se"); return; }
+    form.elements.totalDormit.value = (min/60).toFixed(2);
+    autosave(); toast("Calculat (ajustable manualment)");
+  });
+  $("#saveBtn").addEventListener("click", ()=>{ autosave(); save(true); toast("✓ Dia desat"); });
+  $("#clearDayBtn").addEventListener("click", ()=>{
+    if(!confirm(`Netejar les dades del ${prettyDate(currentDate)}?`)) return;
+    delete state.dies[currentDate]; save(true); renderDateNav(); renderForm(); toast("Dia netejat");
+  });
+  $("#goViewBtn").addEventListener("click", ()=>showView("view"));
+
+  /* pestanyes */
+  $$("nav.tabs button").forEach(b=>b.addEventListener("click", ()=>showView(b.dataset.view)));
+
+  /* exportacions */
+  $("#pdfBtn").addEventListener("click", doPrint);
+  $("#csvBtn").addEventListener("click", exportCSV);
+  $("#csvBtn2").addEventListener("click", exportCSV);
+  $("#exportJson").addEventListener("click", exportJSON);
+  $("#importJsonBtn").addEventListener("click", ()=>$("#importJson").click());
+  $("#importJson").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) importJSON(f); e.target.value=""; });
+  $("#wipeBtn").addEventListener("click", ()=>{
+    if(!confirm("Esborrar TOTES les dades (dies, medicaments i fitxa)? Aquesta acció no es pot desfer.")) return;
+    localStorage.removeItem(STORE_KEY); state=defaultState(); save(true); renderAll(); showView("entry"); toast("Dades esborrades");
+  });
+
+  bindMeta();
+  renderAll();
+  updateStorageInfo();
+
+  /* si no hi ha dades, crea l'entrada d'avui buida per començar net */
+  if(!dayHasData(currentDate)) renderForm();
+}
+document.addEventListener("DOMContentLoaded", init);
+
+/* ---------- PWA: instal·lable i offline ---------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => { /* sense SW, l'app segueix funcionant */ });
+  });
+}
+</script>
+</body>
+</html>
