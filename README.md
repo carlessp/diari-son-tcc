@@ -3,6 +3,10 @@
 Webapp per omplir des del mòbil el **Diari de son per a la teràpia conductual-cognitiva de l'insomni**
 (Hospital Universitari Vall d'Hebron · Servei de Neurofisiologia Clínica).
 
+**🌐 App en línia:** https://carlessp.github.io/diari-son-tcc/ — instal·lable al mòbil com una app (PWA).
+
+![Icona](icons/icon-192.png)
+
 És un **únic fitxer `index.html`** sense cap dependència externa: funciona sense internet i desa
 les dades al navegador (`localStorage`). Opcionalment es poden exportar/importar com a **JSON**.
 
