@@ -2,7 +2,7 @@
    Estratègia:
    - Navegació: xarxa primer, amb caiguda a la còpia en caché (funciona offline).
    - Recursos estàtics: caché primer, actualitzant en segon pla.            */
-const CACHE = "diarison-v1";
+const CACHE = "diarison-v2";
 const ASSETS = [
   "./",
   "./index.html",

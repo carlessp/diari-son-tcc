@@ -81,7 +81,7 @@
     border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none;
   }
   input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
-  input[type=time]{font-variant-numeric:tabular-nums;letter-spacing:.5px}
+  input[type=time],.timefield{font-variant-numeric:tabular-nums;letter-spacing:.5px}
   textarea{min-height:74px;resize:vertical}
   .stepper{display:flex;align-items:center;gap:8px}
   .stepper button{
@@ -231,16 +231,16 @@
       <div class="card">
         <h2><span class="dot"></span>Nit</h2>
         <div class="grid">
-          <div class="field"><label>Hora que em fico al llit <span class="unit">(HH:MM)</span></label><input type="time" name="llit"></div>
-          <div class="field"><label>Hora que m'adormo <span class="unit">(HH:MM)</span></label><input type="time" name="adorm"></div>
+          <div class="field"><label>Hora que em fico al llit <span class="unit">(HH:MM)</span></label><input type="text" inputmode="numeric" autocomplete="off" class="timefield" maxlength="5" placeholder="HH:MM" name="llit"></div>
+          <div class="field"><label>Hora que m'adormo <span class="unit">(HH:MM)</span></label><input type="text" inputmode="numeric" autocomplete="off" class="timefield" maxlength="5" placeholder="HH:MM" name="adorm"></div>
         </div>
       </div>
 
       <div class="card">
         <h2><span class="dot"></span>Al dia següent</h2>
         <div class="grid">
-          <div class="field"><label>Hora que em desperto <span class="unit">(HH:MM)</span></label><input type="time" name="desperta"></div>
-          <div class="field"><label>Hora que em llevo <span class="unit">(HH:MM)</span></label><input type="time" name="lleva"></div>
+          <div class="field"><label>Hora que em desperto <span class="unit">(HH:MM)</span></label><input type="text" inputmode="numeric" autocomplete="off" class="timefield" maxlength="5" placeholder="HH:MM" name="desperta"></div>
+          <div class="field"><label>Hora que em llevo <span class="unit">(HH:MM)</span></label><input type="text" inputmode="numeric" autocomplete="off" class="timefield" maxlength="5" placeholder="HH:MM" name="lleva"></div>
         </div>
       </div>
 
@@ -449,6 +449,47 @@ function overnight(start,end){ const a=toMin(start), b=toMin(end); if(a==null||b
 function fmtHours(min){ if(min==null) return "—"; return (min/60).toFixed(2).replace(/\.?0+$/,"") + " h"; }
 function fmtHM(min){ if(min==null) return "—"; const h=Math.floor(min/60), m=Math.round(min%60); return `${h}h ${String(m).padStart(2,"0")}m`; }
 
+/* ---------- camps d'hora (text, sense selector natiu) ---------- *
+ * Els navegadors mòbils, i sobretot les PWA instal·lades, tenen problemes
+ * amb <input type="time"> (no obren el selector o no confirmen el valor).
+ * Aquests camps accepten dígits, s'autoformategen a HH:MM i es validen.  */
+function normTime(v){
+  const s = String(v==null?"":v).trim();
+  if(!s) return "";
+  const d = s.replace(/\D/g,"");
+  if(!d) return "";
+  let h, m;
+  if(s.includes(":")){
+    const p = s.split(":");
+    h = p[0].replace(/\D/g,""); m = (p[1]||"").replace(/\D/g,"");
+  } else if(d.length<=2){ h = d; m = "0"; }
+  else if(d.length===3){ h = d[0]; m = d.slice(1); }
+  else { h = d.slice(0,2); m = d.slice(2,4); }
+  const H = parseInt(h,10), M = parseInt(m||"0",10);
+  if(isNaN(H) || isNaN(M) || H>23 || M>59) return "";
+  return String(H).padStart(2,"0")+":"+String(M).padStart(2,"0");
+}
+function maskTime(el){
+  const d = el.value.replace(/\D/g,"").slice(0,4);
+  el.value = d.length===4 ? d.slice(0,2)+":"+d.slice(2) : d;
+}
+function commitTime(el){
+  if(!el.value) return;
+  const n = normTime(el.value);
+  if(!n){ el.value=""; toast("Hora no vàlida (forma HH:MM)"); return; }
+  if(n!==el.value) el.value = n;
+}
+function attachTimeField(el){
+  if(!el || el.dataset.tf) return;
+  el.dataset.tf = "1";
+  el.setAttribute("inputmode","numeric");
+  el.setAttribute("autocomplete","off");
+  el.setAttribute("maxlength","5");
+  el.setAttribute("placeholder","HH:MM");
+  el.addEventListener("input", ()=>maskTime(el));
+  el.addEventListener("blur", ()=>commitTime(el));
+}
+
 /* ---------- accés a dies ---------- */
 function emptyDay(){
   return { llit:"", adorm:"", desperta:"", lleva:"", despertars:0, aixecars:0, torns:[], totalDormit:"", meds:[], qualitat:null, sentiments:"", notes:"" };
@@ -504,13 +545,13 @@ function readForm(){
   const f = $("#entryForm");
   const q = $("#scale").dataset.value;
   return {
-    llit: f.elements.llit.value,
-    adorm: f.elements.adorm.value,
-    desperta: f.elements.desperta.value,
-    lleva: f.elements.lleva.value,
+    llit: normTime(f.elements.llit.value),
+    adorm: normTime(f.elements.adorm.value),
+    desperta: normTime(f.elements.desperta.value),
+    lleva: normTime(f.elements.lleva.value),
     despertars: Math.max(0, parseInt(f.elements.despertars.value,10) || 0),
     aixecars: Math.max(0, parseInt(f.elements.aixecars.value,10) || 0),
-    torns: $$("#tornsList input").map(i=>i.value).filter(Boolean),
+    torns: $$("#tornsList input").map(i=>normTime(i.value)).filter(Boolean),
     totalDormit: f.elements.totalDormit.value === "" ? "" : parseFloat(f.elements.totalDormit.value),
     meds: $$("#medsList .dynrow").map(r=>({
       nom: r.querySelector(".m-nom").value.trim(),
@@ -529,7 +570,8 @@ function renderTorns(list){
 }
 function tornRow(v=""){
   const div = document.createElement("div"); div.className = "dynrow";
-  div.innerHTML = `<input type="time" value="${v}"><button type="button" class="del" title="Treure">✕</button>`;
+  div.innerHTML = `<input type="text" inputmode="numeric" autocomplete="off" class="timefield" maxlength="5" placeholder="HH:MM" value="${escapeAttr(v)}"><button type="button" class="del" title="Treure">✕</button>`;
+  attachTimeField(div.querySelector(".timefield"));
   div.querySelector(".del").addEventListener("click", ()=>{ div.remove(); autosave(); });
   return div;
 }
@@ -600,7 +642,7 @@ function setScale(i){
 function autosave(refresh){
   const data = readForm();
   setDay(currentDate, data);
-  rememberMeds(data.meds);
+  if(refresh) rememberMeds(data.meds);
   renderDateNav();
   if(refresh) renderMedChips();
 }
@@ -910,7 +952,7 @@ function init(){
     form.elements.totalDormit.value = (min/60).toFixed(2);
     autosave(); toast("Calculat (ajustable manualment)");
   });
-  $("#saveBtn").addEventListener("click", ()=>{ autosave(); save(true); toast("✓ Dia desat"); });
+  $("#saveBtn").addEventListener("click", ()=>{ autosave(true); save(true); toast("✓ Dia desat"); });
   $("#clearDayBtn").addEventListener("click", ()=>{
     if(!confirm(`Netejar les dades del ${prettyDate(currentDate)}?`)) return;
     delete state.dies[currentDate]; save(true); renderDateNav(); renderForm(); toast("Dia netejat");
@@ -934,6 +976,7 @@ function init(){
 
   bindMeta();
   renderAll();
+  $$(".timefield").forEach(attachTimeField);
   updateStorageInfo();
 
   /* si no hi ha dades, crea l'entrada d'avui buida per començar net */
